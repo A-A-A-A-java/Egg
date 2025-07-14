@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Turnstile Example</title>
+  <!-- Load Turnstile JavaScript -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+  <form id="myForm">
+    <!-- Your form inputs -->
+    <input type="text" name="username" placeholder="Username" required />
+
+    <!-- Turnstile widget -->
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAABk_nwyKmKpFjt8U"></div>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    const form = document.getElementById("myForm");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Get Turnstile response token
+      const token = window.turnstile.getResponse();
+
+      if (!token) {
+        alert("Please complete the Turnstile challenge.");
+        return;
+      }
+
+      // Collect form data
+      const formData = new FormData(form);
+      formData.append("token", token); // Append Turnstile token
+
+      // Send data to your Cloudflare Worker endpoint
+      const response = await fetch("https://your-worker-url.workers.dev", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert("Verification succeeded! Form submitted.");
+        form.reset();
+        window.turnstile.reset(); // Reset Turnstile widget
+      } else {
+        alert("Verification failed. Please try again.");
+        window.turnstile.reset();
+      }
+    });
+  </script>
+</body>
+</html>
